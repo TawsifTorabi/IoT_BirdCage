@@ -7,6 +7,7 @@
 // HX711 circuit wiring
 const int LOADCELL_DOUT_PIN = 2;
 const int LOADCELL_SCK_PIN = 3;
+const int PIR_PIN = 4; // PIR sensor pin
 
 HX711 scale;
 
@@ -16,93 +17,32 @@ Adafruit_BMP280 bmp; // I2C
 SoftwareSerial serialPort(6, 7); // SoftwareSerial object using pins 6 (RX) and 7 (TX)
 
 unsigned long previousMillis = 0;
-const long interval = 5000; // 5 seconds interval
+const long interval = 2000; // 2 seconds interval
 
 void setup() {
   Serial.begin(9600); // Initialize hardware serial (USB)
   serialPort.begin(9600); // Initialize software serial
+  pinMode(PIR_PIN, INPUT); // Set PIR pin as input
 
-  Serial.println(F("HX711 and BMP280 test")); // Print to USB
-  serialPort.println(F("HX711 and BMP280 test")); // Print to software serial
+  Serial.println(F("HX711, BMP280 and PIR test")); // Print to USB
+  serialPort.println(F("HX711, BMP280 and PIR test")); // Print to software serial
 
   // Initializing the scale
   scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
-
-  Serial.println(F("Before setting up the scale:")); // Print to USB
-  serialPort.println(F("Before setting up the scale:")); // Print to software serial
-
-  Serial.print(F("read:\t\t")); // Print to USB
-  Serial.println(scale.read()); // print a raw reading from the ADC
-  serialPort.print(F("read:\t\t")); // Print to software serial
-  serialPort.println(scale.read()); // print a raw reading from the ADC
-
-  Serial.print(F("read average:\t\t")); // Print to USB
-  Serial.println(scale.read_average(20)); // print the average of 20 readings from the ADC
-  serialPort.print(F("read average:\t\t")); // Print to software serial
-  serialPort.println(scale.read_average(20)); // print the average of 20 readings from the ADC
-
-  Serial.print(F("get value:\t\t")); // Print to USB
-  Serial.println(scale.get_value(5)); // print the average of 5 readings from the ADC minus the tare weight (not set yet)
-  serialPort.print(F("get value:\t\t")); // Print to software serial
-  serialPort.println(scale.get_value(5)); // print the average of 5 readings from the ADC minus the tare weight (not set yet)
-
-  Serial.print(F("get units:\t\t")); // Print to USB
-  Serial.println(scale.get_units(5), 1); // print the average of 5 readings from the ADC minus tare weight (not set) divided
-                                          // by the SCALE parameter (not set yet)
-  serialPort.print(F("get units:\t\t")); // Print to software serial
-  serialPort.println(scale.get_units(5), 1); // print the average of 5 readings from the ADC minus tare weight (not set) divided
-                                          // by the SCALE parameter (not set yet)
 
   // Setting up the scale
   scale.set_scale(407);
   scale.tare(); // reset the scale to 0
 
-  Serial.println(F("After setting up the scale:")); // Print to USB
-  serialPort.println(F("After setting up the scale:")); // Print to software serial
-
-  Serial.print(F("read:\t\t")); // Print to USB
-  Serial.println(scale.read()); // print a raw reading from the ADC
-  serialPort.print(F("read:\t\t")); // Print to software serial
-  serialPort.println(scale.read()); // print a raw reading from the ADC
-
-  Serial.print(F("read average:\t\t")); // Print to USB
-  Serial.println(scale.read_average(20)); // print the average of 20 readings from the ADC
-  serialPort.print(F("read average:\t\t")); // Print to software serial
-  serialPort.println(scale.read_average(20)); // print the average of 20 readings from the ADC
-
-  Serial.print(F("get value:\t\t")); // Print to USB
-  Serial.println(scale.get_value(5)); // print the average of 5 readings from the ADC minus the tare weight, set with tare()
-  serialPort.print(F("get value:\t\t")); // Print to software serial
-  serialPort.println(scale.get_value(5)); // print the average of 5 readings from the ADC minus the tare weight, set with tare()
-
-  Serial.print(F("get units:\t\t")); // Print to USB
-  Serial.println(scale.get_units(5), 1); // print the average of 5 readings from the ADC minus tare weight, divided
-                                          // by the SCALE parameter set with set_scale
-  serialPort.print(F("get units:\t\t")); // Print to software serial
-  serialPort.println(scale.get_units(5), 1); // print the average of 5 readings from the ADC minus tare weight, divided
-                                          // by the SCALE parameter set with set_scale
-
+  // Initializing BMP280
   Serial.println(F("BMP280 Initializing...")); // Print to USB
   serialPort.println(F("BMP280 Initializing...")); // Print to software serial
-  unsigned status;
-  status = bmp.begin(BMP280_ADDRESS);
+  unsigned status = bmp.begin(BMP280_ADDRESS);
   if (!status) {
     Serial.println(F("Could not find a valid BMP280 sensor, check wiring or "
                      "try a different address!")); // Print to USB
     serialPort.println(F("Could not find a valid BMP280 sensor, check wiring or "
                      "try a different address!")); // Print to software serial
-    Serial.print(F("SensorID was: 0x")); // Print to USB
-    Serial.println(bmp.sensorID(), 16); // Print to USB
-    serialPort.print(F("SensorID was: 0x")); // Print to software serial
-    serialPort.println(bmp.sensorID(), 16); // Print to software serial
-    Serial.print(F("        ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n")); // Print to USB
-    serialPort.print(F("        ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n")); // Print to software serial
-    Serial.print(F("   ID of 0x56-0x58 represents a BMP 280,\n")); // Print to USB
-    serialPort.print(F("   ID of 0x56-0x58 represents a BMP 280,\n")); // Print to software serial
-    Serial.print(F("        ID of 0x60 represents a BME 280.\n")); // Print to USB
-    serialPort.print(F("        ID of 0x60 represents a BME 280.\n")); // Print to software serial
-    Serial.print(F("        ID of 0x61 represents a BME 680.\n")); // Print to USB
-    serialPort.print(F("        ID of 0x61 represents a BME 680.\n")); // Print to software serial
     while (1)
       delay(10);
   }
@@ -120,6 +60,19 @@ void loop() {
 
   if (currentMillis - previousMillis >= interval) {
     previousMillis = currentMillis;
+
+    // Read PIR sensor
+    int pirState = digitalRead(PIR_PIN);
+
+    if (pirState == HIGH) {
+      Serial.println(F("PIR: Motion Detected")); // Print to USB
+      serialPort.println(F("PIR: Motion Detected")); // Print to software serial
+      // Add your actions here when motion is detected
+    } else {
+      Serial.println(F("PIR: Motion Not Detected")); // Print to USB
+      serialPort.println(F("PIR: Motion Not Detected")); // Print to software serial
+      // Add your actions here when no motion is detected
+    }
 
     Serial.print(F("HX711: one reading:\t")); // Print to USB
     serialPort.print(F("HX711: one reading:\t")); // Print to software serial
@@ -158,7 +111,7 @@ void loop() {
   // Read serial messages from computer
   if (serialPort.available() > 0) {
     String serialMessage = serialPort.readStringUntil('\n');
-    
+
     // Pass the message to the other MCU by writing it to TX pin
     Serial.println(serialMessage); // Print to USB
     serialPort.println(serialMessage); // Print to software serial
@@ -166,10 +119,10 @@ void loop() {
     serialPort.println("Serial_Software"); // Print to software serial
   }
 
-    // Read serial messages from computer
+  // Read serial messages from computer
   if (Serial.available() > 0) {
     String serialMessage1 = Serial.readStringUntil('\n');
-    
+
     // Pass the message to the other MCU by writing it to TX pin
     Serial.println(serialMessage1); // Print to USB
     serialPort.println(serialMessage1); // Print to software serial
