@@ -1,0 +1,104 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensor Data</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Top bar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-cyan" style="background: cadetblue;">
+        <a class="navbar-brand text-white" href="#">IoT_BirdCage</a>
+    </nav>
+
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col">
+                <div class="bg-light p-3 mb-3">
+                    <h4 class="text-primary">HX711 Data</h4>
+                    <div id="hx711Data"></div>
+                </div>
+                <div class="bg-light p-3 mb-3">
+                    <h4 class="text-success">Weight</h4>
+                    <div id="weight"></div>
+                </div>
+                <div class="bg-light p-3">
+                    <h4 class="text-warning">Cage Proximity</h4>
+                    <div id="pirData"></div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="bg-light p-3 mb-3">
+                    <h4 class="text-danger">Temperature</h4>
+                    <div id="temperature"></div>
+                </div>
+                <div class="bg-light p-3 mb-3">
+                    <h4 class="text-warning">Pressure</h4>
+                    <div id="pressure"></div>
+                </div>
+                <div class="bg-light p-3">
+                    <h4 class="text-info">Altitude</h4>
+                    <div id="altitude"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        //var websocketAddress = "ws://192.168.247.69:80/ws";
+        var websocketAddress = "ws://192.168.0.103:80/ws";
+        var websocket;
+
+        function connectWebSocket() {
+            websocket = new WebSocket(websocketAddress);
+            websocket.onopen = function() {
+                console.log("WebSocket connected");
+            };
+
+            websocket.onmessage = function(event) {
+                var data = event.data;
+                parseData(data);
+            };
+
+            websocket.onclose = function() {
+                console.log("WebSocket disconnected. Reconnecting...");
+                setTimeout(connectWebSocket, 2000); // Attempt to reconnect after 2 seconds
+            };
+        }
+
+        function parseData(data) {
+            var lines = data.split("\n");
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i].trim();
+                if (line.startsWith("HX711:")) {
+                    var hxData = line.split("|");
+                    document.getElementById("hx711Data").innerText = hxData[0];
+                    var readingIndex = line.indexOf("one reading:");
+                    if (readingIndex !== -1) {
+                        var weight = line.substring(readingIndex + 12).trim();
+                        document.getElementById("weight").innerText = "Weight: " + weight;
+                    }
+                } else if (line.startsWith("PIR:")) {
+                    var pirData = line.split(":");
+                    document.getElementById("pirData").innerText = pirData[1].trim();
+                } else if (line.startsWith("BMP280:")) {
+                    var bmpData = line.split("|");
+                    document.getElementById("temperature").innerText = bmpData[0].split("=")[1].trim();
+                    document.getElementById("pressure").innerText = bmpData[1].split("=")[1].trim();
+                    document.getElementById("altitude").innerText = bmpData[2].split("=")[1].trim();
+                }
+            }
+        }
+
+        connectWebSocket();
+    </script>
+</body>
+</html>
